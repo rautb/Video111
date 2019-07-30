@@ -6,9 +6,12 @@ import java.io.FileInputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+
+import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -24,8 +27,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 public class MainActivity extends Activity implements OnClickListener {
 
+    private int STORAGE_PERMISSION_CODE = 23;
     private TextView messageText;
     private Button uploadButton, btnselectpic, btnselectaudio, btnselectvideo;
     private ImageView imageview;
@@ -54,7 +62,61 @@ public class MainActivity extends Activity implements OnClickListener {
         btnselectvideo.setOnClickListener(this);
         uploadButton.setOnClickListener(this);
         upLoadServerUri = "http://192.168.43.110/testing/upload_to_server.php";
+
+        if(isReadStorageAllowed()){
+            //If permission is already having then showing the toast
+            Toast.makeText(MainActivity.this,"You already have the permission",Toast.LENGTH_LONG).show();
+            //Existing the method with return
+            return;
+        }
+
+        //If the app has not the permission then asking for the permission
+        requestStoragePermission();
     }
+
+    private void requestStoragePermission() {
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this,Manifest.permission.READ_EXTERNAL_STORAGE)){
+            //If the user has denied the permission previously your code will come to this block
+            //Here you can explain why you need this permission
+            //Explain here why you need this permission
+        }
+
+        //And finally ask for the permission
+        ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},STORAGE_PERMISSION_CODE);
+    }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+
+        //Checking the request code of our request
+        if(requestCode == STORAGE_PERMISSION_CODE){
+
+            //If permission is granted
+            if(grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+
+                //Displaying a toast
+                Toast.makeText(this,"Permission granted now you can read the storage",Toast.LENGTH_LONG).show();
+            }else{
+                //Displaying another toast if permission is not granted
+                Toast.makeText(this,"Oops you just denied the permission",Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+
+    private boolean isReadStorageAllowed() {
+
+        int result = ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE);
+
+        //If permission is granted returning true
+        if (result == PackageManager.PERMISSION_GRANTED)
+            return true;
+
+        //If permission is not granted returning false
+        return false;
+    }
+
+
 
     @Override
     public void onClick(View arg0) {
@@ -243,7 +305,7 @@ public class MainActivity extends Activity implements OnClickListener {
                             Toast.makeText(MainActivity.this,
                                     "File Upload Complete.", Toast.LENGTH_LONG)
                                     .show();
-                           // Toast.makeText(MainActivity.this, serverResponseCode, Toast.LENGTH_SHORT).show();
+                            // Toast.makeText(MainActivity.this, serverResponseCode, Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
